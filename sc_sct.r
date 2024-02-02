@@ -1,18 +1,22 @@
 #!/bin/env Rscript
 #DECLARE FUNCTIONS / LOAD LIBRARIES#
-library(pacman,lib="/work/users/c/a/came/R_LIBS")
+library(pacman,lib="")
 dep = c("plyr","data.table","devtools","Seurat","tidyverse","miQC","SeuratWrappers","flexmix","SingleCellExperiment","SummarizedExperiment","RColorBrewer","ggsankey",
 "ggplot2","cowplot","SingleR","scran","celldex","ComplexHeatmap","pheatmap","circlize","GGally","forcats","dplyr","patchwork","pals","harmony",
 "ggpubr","paletteer","ggridges","fgsea","UCell","FactoMineR","factoextra","zeallot","gridExtra","grid","optparse")
-#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="/work/users/c/a/came/R_LIBS")
-p_load(dep,character.only=TRUE,lib="/work/users/c/a/came/R_LIBS",install=FALSE,update=FALSE)
+#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="")
+p_load(dep,character.only=TRUE,lib="",install=FALSE,update=FALSE)
 
+option_list = list(
+  make_option(c("--wd"), type="character", default=NULL,help="Input folder, where all the cellranger files are being stored.", metavar="character")
+ # make_option(c("--output"), type="character", default=NULL,help="Decides what folder is the root for output.", metavar="character")
+  )
 p = parse_args(OptionParser(option_list=option_list))
 
-source("/work/users/c/a/came/R_LIBS/sc_functions.r")
+source("/sc_functions.r")
 
 #BEGIN SCT#
-S_Combined = readRDS(paste0(getwd(),"/S_Combined_postQC_stage1.rds"))
+S_Combined = readRDS(paste0(p[1],"/S_Combined_postQC_stage1.rds"))
 
 myl = SplitObject(S_Combined,split.by="orig.ident")
 myl = lapply(myl,SCTransform,method='glmGamPoi',vst.flavor='v2',vars.to.regress=c('percent.mt','S.Score','G2M.Score'),return.only.var.genes=FALSE,verbose=FALSE)

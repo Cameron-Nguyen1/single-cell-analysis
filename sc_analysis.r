@@ -1,28 +1,38 @@
 #!/bin/env Rscript
-library(pacman,lib="/work/users/c/a/came/R_LIBS")
-library(optparse,lib="/work/users/c/a/came/R_LIBS")
+library(pacman,lib="")
+library(optparse,lib="")
 dep = c("plyr","data.table","devtools","Seurat","tidyverse","miQC","SeuratWrappers","flexmix","SingleCellExperiment","SummarizedExperiment","RColorBrewer","ggsankey",
 "ggplot2","cowplot","SingleR","scran","celldex","ComplexHeatmap","pheatmap","circlize","GGally","forcats","dplyr","patchwork","pals","harmony",
 "ggpubr","paletteer","ggridges","fgsea","UCell","FactoMineR","factoextra","zeallot","gridExtra","grid","SeuratDisk","Azimuth")
-#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="/work/users/c/a/came/R_LIBS")
-p_load(dep,character.only=TRUE,lib="/work/users/c/a/came/R_LIBS",install=FALSE,update=FALSE)
-library(Azimuth,lib="/work/users/c/a/came/R_LIBS")
+#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="")
+p_load(dep,character.only=TRUE,lib="",install=FALSE,update=FALSE)
+library(Azimuth,lib="")
 
-source("/work/users/c/a/came/R_LIBS/sc_functions.r")
-base="/work/users/c/a/came/HAE_SingleCell/REP_C/outs/per_sample_outs/"
+#option_list = list(
+#  make_option(c("--wd"), type="character", default=NULL,help="Working Directory", metavar="character"),
+#  make_option(c("--base"),type="character", default=NULL,help="Input folder, where all the cellranger files are being stored.", metavar="character"),
+#  make_option(c("--hs_or_mm"),type="character", default=NULL,help="Either HS or MM for homo sapiens and mus musculus respectively.", metavar="character")
+#  )
+#p = parse_args(OptionParser(option_list=option_list))
+
+source("/sc_functions.r")
+base="path/to/10x/counts/output"
 parent=getwd()
 S_Combined.INT = readRDS(paste0(getwd(),"/S_Combined.INT.stage2.rds"))
-S_Combined.harm = readRDS(paste0(getwd(),"/S_Combined.harm.stage2.rds"))
-S_Combined.SCT = readRDS(paste0(getwd(),"/S_Combined.SCT.stage2.rds"))
-DefaultAssay(S_Combined.INT) = "integrated"
-DefaultAssay(S_Combined.harm) = "RNA"
-DefaultAssay(S_Combined.SCT) = "SCT"
+#S_Combined.harm = readRDS(paste0(getwd(),"/S_Combined.harm.stage2.rds"))
+#S_Combined.SCT = readRDS(paste0(getwd(),"/S_Combined.SCT.stage2.rds"))
+#DefaultAssay(S_Combined.INT) = "integrated"
+#DefaultAssay(S_Combined.harm) = "RNA"
+#DefaultAssay(S_Combined.SCT) = "SCT"
 
-S_Combined.SCT = aziPredict(S_Combined.SCT,"SCT","lungref","SCT_AP_SCORES.csv")
-S_Combined.harm = aziPredict(S_Combined.harm,"RNA","lungref","Harmony_AP_SCORES.csv")
+#S_Combined.SCT = aziPredict(S_Combined.SCT,"SCT","lungref","SCT_AP_SCORES.csv")
+#S_Combined.harm = aziPredict(S_Combined.harm,"RNA","lungref","Harmony_AP_SCORES.csv")
 
-saveRDS(S_Combined.SCT,file="S_Combined.SCT.Azimuth.rds")
-saveRDS(S_Combined.Harm,file="S_Combined.Harm.Azimuth.rds")
+#saveRDS(S_Combined.SCT,file="S_Combined.SCT.Azimuth.rds")
+#saveRDS(S_Combined.Harm,file="S_Combined.Harm.Azimuth.rds")
+S_Combined.SCT = readRDS("S_Combined.SCT.Azimuth.rds")
+S_Combined.harm = readRDS("S_Combined.harm.Azimuth.rds")
+
 
 #COLORS#
 sample.cols = paletteer_d("ggsci::category20_d3")[1:length(list.files(base))]
@@ -133,6 +143,6 @@ feature_plots(S_Combined.harm,"Annotation_Cluster_Barplot_Harm","Ridgeplot_Featu
 feature_plots(S_Combined.SCT,"Annotation_Cluster_Barplot_SCT","Ridgeplot_Features_SCT","SCT","hs")
 feature_plots(S_Combined.INT,"Annotation_Cluster_Barplot_INT","Ridgeplot_Features_INT","integrated","hs")
 
-tx = list("Mock"=c("CMO_1","CMO_2","CMO_3","CMO_4"),"Infected"=c("CMO_5","CMO_6","CMO_7","CMO_8"))
-subcluster(S_Combined.harm,tx=tx,integ="SCT",parent,"hs")
+tx = list("Mock"=c("CMO_1","CMO_2","CMO_3"),"IFNw"=c("CMO_4","CMO_5","CMO_6"),"IFNAR1"=c("CMO_7","CMO_8","CMO_9"),"HI7"=c("CMO_10","CMO_11","CMO_12"))
+subcluster(S_Combined.harm,tx=tx,integ="Harmony",parent,"hs")
 subcluster(S_Combined.SCT,tx=tx,integ="SCT",parent,"hs")

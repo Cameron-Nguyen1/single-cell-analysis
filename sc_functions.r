@@ -288,7 +288,7 @@ find_plot_markers = function(x,assay,lfc_pdf,annot_pdf,dotplot,hs_or_mm){
       else{
       ta_DICE = ComplexHeatmap::HeatmapAnnotation(`Cluster`=x.hm@meta.data[[res[iter]]], `DICE`=x.hm@meta.data$DICE.pred_pruned, col=list(`DICE`=annot_colors[["DICE.pred_pruned"]],`Cluster`=cluster.cols))
       ta_HPCA = ComplexHeatmap::HeatmapAnnotation(`Cluster`=x.hm@meta.data[[res[iter]]], `HPCA`=x.hm@meta.data$HPCA.pred_pruned, col=list(`HPCA`=annot_colors[["HPCA.pred_pruned"]],`Cluster`=cluster.cols))
-      ta_azi = ComplexHeatmap::HeatmapAnnotation(`Cluster`=x.hm@meta.data[[res[iter]]], `L2_LungmapAzi`=x.hm@meta.data$predicted.celltype_level2, col=list(`L2_LungmapAzi`=annot_colors[["predicted.celltype_level2"]],`Cluster`=cluster.cols))
+      ta_azi = ComplexHeatmap::HeatmapAnnotation(`Cluster`=x.hm@meta.data[[res[iter]]], `L2_LungmapAzi`=x.hm@meta.data$predicted.ann_level_3, col=list(`L2_LungmapAzi`=annot_colors[["predicted.ann_level_3"]],`Cluster`=cluster.cols))
       }
       hm_list = list()
       for (ta in objects()[grepl("^ta_",objects())]){
@@ -309,19 +309,19 @@ find_plot_markers = function(x,assay,lfc_pdf,annot_pdf,dotplot,hs_or_mm){
 }
 feature_plots = function(x, barplot, ridgeplot,assay,hs_or_mm){ #Doesn't consider integration type i.e. Harm vs SCT
   annot_colors = generate_annot_cols(x)
-  if (hs_or_mm == "mm"){gb = list("mrsd","immgen")}
-  else{gb=list("DICE","HPCA")}
+  if (hs_or_mm == "mm"){gb = list("mrsd","immgen","predicted.celltype_level2")
+  }else{gb=list("DICE","HPCA","predicted.ann_level_3")}
   dat <- x@meta.data
   if (assay == "RNA"){
-    p1 = ggplot(data=dat, aes(x=RNA_snn_res.0.2, fill=predicted.celltype_level2))+
-        geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[["predicted.celltype_level2"]])
-    p2 = ggplot(data=dat, aes(x=RNA_snn_res.0.2, fill=get(paste0(rb[1],".pred_pruned"))))+
+    p1 = ggplot(data=dat, aes(x=RNA_snn_res.0.2, fill=eval(parse(text=gb[[3]]))))+
+        geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[[gb[[3]]]])
+    p2 = ggplot(data=dat, aes(x=RNA_snn_res.0.2, fill=get(paste0(gb[1],".pred_pruned"))))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual(gb[1], values=annot_colors[[paste0(gb[1],".pred_pruned")]])
     p3 = ggplot(data=dat, aes(x=RNA_snn_res.0.2, fill=paste0(gb[2],".pred_pruned")))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual(gb[2], values=annot_colors[[paste0(gb[2],".pred_pruned")]])
-    p4 = ggplot(data=dat, aes(x=RNA_snn_res.0.5, fill=predicted.celltype_level2))+
-        geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[["predicted.celltype_level2"]])
-    p5 = ggplot(data=dat, aes(x=RNA_snn_res.0.5, fill=get(paste0(rb[1],".pred_pruned"))))+
+    p4 = ggplot(data=dat, aes(x=RNA_snn_res.0.5, fill=eval(parse(text=gb[[3]]))))+
+        geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[[gb[[3]]]])
+    p5 = ggplot(data=dat, aes(x=RNA_snn_res.0.5, fill=get(paste0(gb[1],".pred_pruned"))))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual(gb[1], values=annot_colors[[paste0(gb[1],".pred_pruned")]])
     p6 = ggplot(data=dat, aes(x=RNA_snn_res.0.5, fill=paste0(gb[2],".pred_pruned")))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual(gb[2], values=annot_colors[[paste0(gb[2],".pred_pruned")]])
@@ -335,15 +335,15 @@ feature_plots = function(x, barplot, ridgeplot,assay,hs_or_mm){ #Doesn't conside
     ggsave(paste0(ridgeplot,".pdf"),device='pdf',height=12,width=8,plot=p)
   }
   if (assay=="integrated"){
-    #p1 = ggplot(data=dat, aes(x=RNA_snn_res.0.2, fill=predicted.celltype_level2))+
-    #    geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[["predicted.celltype_level2"]])
-    p2 = ggplot(data=dat, aes(x=integrated_snn_res.0.2, fill=get(paste0(rb[1],".pred_pruned"))))+
+    #p1 = ggplot(data=dat, aes(x=RNA_snn_res.0.2, fill=eval(parse(text=gb[[3]]))))+
+    #    geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[[gb[[3]]]])
+    p2 = ggplot(data=dat, aes(x=integrated_snn_res.0.2, fill=get(paste0(gb[1],".pred_pruned"))))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual(gb[1], values=annot_colors[[paste0(gb[1],".pred_pruned")]])
     p3 = ggplot(data=dat, aes(x=integrated_snn_res.0.2, fill=paste0(gb[2],".pred_pruned")))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual(gb[2], values=annot_colors[[paste0(gb[2],".pred_pruned")]])
-    #p4 = ggplot(data=dat, aes(x=RNA_snn_res.0.5, fill=predicted.celltype_level2))+
-    #    geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[["predicted.celltype_level2"]])
-    p5 = ggplot(data=dat, aes(x=integrated_snn_res.0.5, fill=get(paste0(rb[1],".pred_pruned"))))+
+    #p4 = ggplot(data=dat, aes(x=RNA_snn_res.0.5, fill=eval(parse(text=gb[[3]]))))+
+    #    geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[[gb[[3]]]])
+    p5 = ggplot(data=dat, aes(x=integrated_snn_res.0.5, fill=get(paste0(gb[1],".pred_pruned"))))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual(gb[1], values=annot_colors[[paste0(gb[1],".pred_pruned")]])
     p6 = ggplot(data=dat, aes(x=integrated_snn_res.0.5, fill=paste0(gb[2],".pred_pruned")))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual(gb[2], values=annot_colors[[paste0(gb[2],".pred_pruned")]])
@@ -357,15 +357,15 @@ feature_plots = function(x, barplot, ridgeplot,assay,hs_or_mm){ #Doesn't conside
     ggsave(paste0(ridgeplot,".pdf"),device='pdf',height=12,width=8,plot=p)
   }
   if (assay=="SCT"){
-    p1 = ggplot(data=dat, aes(x=SCT_snn_res.0.2, fill=predicted.celltype_level2))+
-        geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[["predicted.celltype_level2"]])
-    p2 = ggplot(data=dat, aes(x=SCT_snn_res.0.2, fill=get(paste0(rb[1],".pred_pruned"))))+
+    p1 = ggplot(data=dat, aes(x=SCT_snn_res.0.2, fill=eval(parse(text=gb[[3]]))))+
+        geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[[gb[[3]]]])
+    p2 = ggplot(data=dat, aes(x=SCT_snn_res.0.2, fill=get(paste0(gb[1],".pred_pruned"))))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual(gb[1], values=annot_colors[[paste0(gb[1],".pred_pruned")]])
     p3 = ggplot(data=dat, aes(x=SCT_snn_res.0.2, fill=paste0(gb[2],".pred_pruned")))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.2"))+scale_fill_manual(gb[2], values=annot_colors[[paste0(gb[2],".pred_pruned")]])
-    p4 = ggplot(data=dat, aes(x=SCT_snn_res.0.5, fill=predicted.celltype_level2))+
-        geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[["predicted.celltype_level2"]])
-    p5 = ggplot(data=dat, aes(x=SCT_snn_res.0.5, fill=get(paste0(rb[1],".pred_pruned"))))+
+    p4 = ggplot(data=dat, aes(x=SCT_snn_res.0.5, fill=eval(parse(text=gb[[3]]))))+
+        geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual("L2_LungmapAzi", values=annot_colors[[gb[[3]]]])
+    p5 = ggplot(data=dat, aes(x=SCT_snn_res.0.5, fill=get(paste0(gb[1],".pred_pruned"))))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual(gb[1], values=annot_colors[[paste0(gb[1],".pred_pruned")]])
     p6 = ggplot(data=dat, aes(x=SCT_snn_res.0.5, fill=paste0(gb[2],".pred_pruned")))+
         geom_bar(position="fill", color="black")+labs(x=paste0("Louvain2 clusters - resolution ",".0.5"))+scale_fill_manual(gb[2], values=annot_colors[[paste0(gb[2],".pred_pruned")]])
@@ -381,8 +381,8 @@ feature_plots = function(x, barplot, ridgeplot,assay,hs_or_mm){ #Doesn't conside
 }
 subcluster = function(x,tx,integ,parent,hs_or_mm){ #tx should be a list() with names of CMO groups attached to CMO labels, i.e. list('model'=c("CMO_1","CMO_2"))
   annot_colors = generate_annot_cols(x)
-  if (hs_or_mm == "mm"){gb=list("mrsd","immgen")}
-  else{gb=list("DICE","HPCA")}
+  if (hs_or_mm == "mm"){gb=list("mrsd","immgen","predicted.celltype_level2")}
+  else{gb=list("DICE","HPCA","predicted.ann_level_3")}
   q = NULL ### Assign every sample to a group name
   for (ele in tx){
       q = c(q,ele)
@@ -430,17 +430,17 @@ subcluster = function(x,tx,integ,parent,hs_or_mm){ #tx should be a list() with n
                   labs(title="Treatment") +
                   scale_color_manual("Treatment", values=sample.cols)
 
-          p2 <- DimPlot(sub_temp, group.by=paste0(gb[1],".pred", reduction="pca")) +
+          p2 <- DimPlot(sub_temp, group.by=paste0(gb[[1]],".pred_pruned"), reduction="pca") +
                   labs(title=paste0(gb[1]," annotation")) +
-                  scale_color_manual("Annotation", values=annot_colors[[paste0(gb[1],".pred_pruned")]])
+                  scale_color_manual("Annotation", values=annot_colors[[paste0(gb[[1]],".pred_pruned")]])
 
-          p3 <- DimPlot(sub_temp, group.by="immgen.pred", reduction="pca") +
-                  labs(title=paste0(gb[2]," annotation")) +
-                  scale_color_manual("Annotation", values=annot_colors[[paste0(gb[2],".pred_pruned")]])
+          p3 <- DimPlot(sub_temp, group.by=paste0(gb[[2]],".pred_pruned"), reduction="pca") +
+                  labs(title=paste0(gb[[2]]," annotation")) +
+                  scale_color_manual("Annotation", values=annot_colors[[paste0(gb[[2]],".pred_pruned")]])
 
-          p4 <- DimPlot(sub_temp, group.by="predicted.celltype_level2", reduction="pca") +
+          p4 <- DimPlot(sub_temp, group.by=gb[[3]], reduction="pca") +
                   labs(title="L2_LungmapAzi") +
-                  scale_color_manual("L2_LungmapAzi", values=annot_colors[["predicted.celltype_level2"]])
+                  scale_color_manual("L2_LungmapAzi", values=annot_colors[[gb[[3]]]])
 
           p5 <- DimPlot(sub_temp, group.by="Phase", reduction="pca") +
                   labs(title="Cell cycle") +
@@ -462,9 +462,9 @@ subcluster = function(x,tx,integ,parent,hs_or_mm){ #tx should be a list() with n
           p1 <- DimPlot(sub_temp, group.by="SCT_snn_res.0.1")+
           rcartocolor::scale_color_carto_d(palette = "Bold")
 
-          p2 <- DimPlot(sub_temp, group.by="predicted.celltype_level2")+
+          p2 <- DimPlot(sub_temp, group.by=gb[[3]])+
           labs(title="L2_LungmapAzi") +
-          scale_color_manual("L2_LungmapAzi", values=annot_colors[["predicted.celltype_level2"]])
+          scale_color_manual("L2_LungmapAzi", values=annot_colors[[gb[[3]]]])
 
           p3 <- DimPlot(sub_temp, group.by="SCT_snn_res.0.2")+
           rcartocolor::scale_color_carto_d(palette = "Bold")
@@ -505,8 +505,7 @@ subcluster = function(x,tx,integ,parent,hs_or_mm){ #tx should be a list() with n
               scde_list[[paste0(names(tx)[v1],".",names(tx)[v2])]] = scde_results
               if (v2 < length(tx)){
                   v2 = v2+1
-              }
-              else{
+              }else{
                   v1 = v1+1
                   v2_og = v2_og+1
                   v2 = v2_og}
@@ -527,7 +526,9 @@ subcluster = function(x,tx,integ,parent,hs_or_mm){ #tx should be a list() with n
               finally={}
           )
           scde = scde_flag()
-          try(write.csv(scde,paste0("sub",iter,"_DGE.csv")))
+          try(for (i in names(scde[[2]])){
+            write.csv(file=paste0(i,"_DEG.csv"),x=scde[[2]][i])
+          })
           #Pseudobulk GEX approach
           ##Checking data metrics
           dat <- as.data.table(sub_temp@meta.data)
