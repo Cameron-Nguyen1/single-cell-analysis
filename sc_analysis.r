@@ -1,38 +1,38 @@
 #!/bin/env Rscript
-library(pacman,lib="")
-library(optparse,lib="")
+library(pacman,lib="/your/R/Library")
+library(optparse,lib="/your/R/Library")
 dep = c("plyr","data.table","devtools","Seurat","tidyverse","miQC","SeuratWrappers","flexmix","SingleCellExperiment","SummarizedExperiment","RColorBrewer","ggsankey",
 "ggplot2","cowplot","SingleR","scran","celldex","ComplexHeatmap","pheatmap","circlize","GGally","forcats","dplyr","patchwork","pals","harmony",
-"ggpubr","paletteer","ggridges","fgsea","UCell","FactoMineR","factoextra","zeallot","gridExtra","grid","SeuratDisk","Azimuth")
-#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="")
-p_load(dep,character.only=TRUE,lib="",install=FALSE,update=FALSE)
-library(Azimuth,lib="")
+"ggpubr","paletteer","ggridges","fgsea","UCell","FactoMineR","factoextra","zeallot","gridExtra","grid","SeuratDisk")
+#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="/your/R/Library")
+p_load(dep,character.only=TRUE,lib="/your/R/Library",install=FALSE,update=FALSE)
+library(Azimuth,lib="/your/R/Library")
 
-#option_list = list(
-#  make_option(c("--wd"), type="character", default=NULL,help="Working Directory", metavar="character"),
-#  make_option(c("--base"),type="character", default=NULL,help="Input folder, where all the cellranger files are being stored.", metavar="character"),
-#  make_option(c("--hs_or_mm"),type="character", default=NULL,help="Either HS or MM for homo sapiens and mus musculus respectively.", metavar="character")
-#  )
-#p = parse_args(OptionParser(option_list=option_list))
+option_list = list(
+  make_option(c("--wd"), type="character", default=NULL,help="Input folder, where all the cellranger files are being stored.", metavar="character"),
+  make_option(c("--samples"),type="character", default=NULL,help="Location of per sample out folders from 10x AGGR/Count pipeline. Contains count matrices.", metavar="character")
+  )
+p = parse_args(OptionParser(option_list=option_list))
 
-source("/sc_functions.r")
-base="path/to/10x/counts/output"
-parent=getwd()
-S_Combined.INT = readRDS(paste0(getwd(),"/S_Combined.INT.stage2.rds"))
-#S_Combined.harm = readRDS(paste0(getwd(),"/S_Combined.harm.stage2.rds"))
-#S_Combined.SCT = readRDS(paste0(getwd(),"/S_Combined.SCT.stage2.rds"))
-#DefaultAssay(S_Combined.INT) = "integrated"
-#DefaultAssay(S_Combined.harm) = "RNA"
-#DefaultAssay(S_Combined.SCT) = "SCT"
+source("/your/R/Library/sc_functions.r") # Source the sc_functions.r file, where it is located on your system.
+base=paste0(as.character(p[2]),"/outs/per_sample_outs/") 
+parent=as.character(p[1])
+S_Combined.INT = readRDS(paste0(p[1],"/S_Combined.INT.stage2.rds"))
+S_Combined.harm = readRDS(paste0(p[1],"/S_Combined.harm.stage2.rds"))
+S_Combined.SCT = readRDS(paste0(p[1],"/S_Combined.SCT.stage2.rds"))
+DefaultAssay(S_Combined.INT) = "integrated"
+DefaultAssay(S_Combined.harm) = "RNA"
+DefaultAssay(S_Combined.SCT) = "SCT"
 
-#S_Combined.SCT = aziPredict(S_Combined.SCT,"SCT","lungref","SCT_AP_SCORES.csv")
-#S_Combined.harm = aziPredict(S_Combined.harm,"RNA","lungref","Harmony_AP_SCORES.csv")
+S_Combined.SCT = aziPredict(dataset=S_Combined.SCT,
+        reference="/your/reference/location",
+        assay="SCT",hs_mm="mm",outfile="SCT_AP_SCORES.csv")
+S_Combined.harm = aziPredict(dataset=S_Combined.harm,
+        reference="/your/reference/location",
+        assay="RNA",hs_mm="mm",outfile="Harmony_AP_SCORES.csv")
 
-#saveRDS(S_Combined.SCT,file="S_Combined.SCT.Azimuth.rds")
-#saveRDS(S_Combined.Harm,file="S_Combined.Harm.Azimuth.rds")
-S_Combined.SCT = readRDS("S_Combined.SCT.Azimuth.rds")
-S_Combined.harm = readRDS("S_Combined.harm.Azimuth.rds")
-
+saveRDS(S_Combined.SCT,"S_Combined.SCTP.rds")
+saveRDS(S_Combined.harm,"S_Combined.harmP.rds")
 
 #COLORS#
 sample.cols = paletteer_d("ggsci::category20_d3")[1:length(list.files(base))]
@@ -121,28 +121,28 @@ z = a+b+c+plot_layout(ncol=1)
 ggsave(plot=z,file="Louvain_UMAP_Clustering.pdf",width=25,height=30)
 
 #Louvain Heatmap
-Louvain_Annotation_HM(S_Combined.INT,"integrated_snn_res.0.2","Annot_Cluster_Prop_INT.pdf","hs")
-Louvain_Annotation_HM(S_Combined.harm,"RNA_snn_res.0.2","Annot_Cluster_Prop_Harm.pdf","hs")
-Louvain_Annotation_HM(S_Combined.SCT,"SCT_snn_res.0.2","Annot_Cluster_Prop_SCT.pdf","hs")
+Louvain_Annotation_HM(S_Combined.INT,"integrated_snn_res.0.2","Annot_Cluster_Prop_INT.pdf","mm")
+Louvain_Annotation_HM(S_Combined.harm,"RNA_snn_res.0.2","Annot_Cluster_Prop_Harm.pdf","mm")
+Louvain_Annotation_HM(S_Combined.SCT,"SCT_snn_res.0.2","Annot_Cluster_Prop_SCT.pdf","mm")
 
 #UMAP Annotations
-make_UMAP_Annotation(S_Combined.harm,"RNA_snn_res.0.2","UMAP_ANNOT_HARM.pdf","hs")
-make_UMAP_Annotation(S_Combined.INT,"integrated_snn_res.0.2","UMAP_ANNOT_INT.pdf","hs")
-make_UMAP_Annotation(S_Combined.SCT,"SCT_snn_res.0.2","UMAP_ANNOT_SCT.pdf","hs")
+make_UMAP_Annotation(S_Combined.harm,"RNA_snn_res.0.2","UMAP_ANNOT_HARM.pdf","mm")
+make_UMAP_Annotation(S_Combined.INT,"integrated_snn_res.0.2","UMAP_ANNOT_INT.pdf","mm")
+make_UMAP_Annotation(S_Combined.SCT,"SCT_snn_res.0.2","UMAP_ANNOT_SCT.pdf","mm")
 
 #Azimuth annotations
 make_UMAP_Azimuth(S_Combined.harm,"AziAnnot_harmony.pdf")
 make_UMAP_Azimuth(S_Combined.SCT,"AziAnnot_SCT.pdf")
 
-find_plot_markers(S_Combined.harm,"RNA","HARM_LFC","HARM_ANNOT_HM","Dotplot_Features_Harm","hs")
+find_plot_markers(S_Combined.harm,"RNA","HARM_LFC","HARM_ANNOT_HM","Dotplot_Features_Harm","mm")
 S_Combined.SCT = PrepSCTFindMarkers(S_Combined.SCT)
-find_plot_markers(S_Combined.SCT,"SCT","SCT_LFC","SCT_ANNOT_HM","Dotplot_Features_SCT","hs")
+find_plot_markers(S_Combined.SCT,"SCT","SCT_LFC","SCT_ANNOT_HM","Dotplot_Features_SCT","mm")
 #find_plot_markers(S_Combined.INT,"integrated","INT_LFC","INT_ANNOT_HM","Dotplot_Features_INT") not available for "integrated" assay data
 
-feature_plots(S_Combined.harm,"Annotation_Cluster_Barplot_Harm","Ridgeplot_Features_Harm","RNA","hs")
-feature_plots(S_Combined.SCT,"Annotation_Cluster_Barplot_SCT","Ridgeplot_Features_SCT","SCT","hs")
-feature_plots(S_Combined.INT,"Annotation_Cluster_Barplot_INT","Ridgeplot_Features_INT","integrated","hs")
+feature_plots(S_Combined.harm,"Annotation_Cluster_Barplot_Harm","Ridgeplot_Features_Harm","RNA","mm")
+feature_plots(S_Combined.SCT,"Annotation_Cluster_Barplot_SCT","Ridgeplot_Features_SCT","SCT","mm")
+feature_plots(S_Combined.INT,"Annotation_Cluster_Barplot_INT","Ridgeplot_Features_INT","integrated","mm")
 
-tx = list("Mock"=c("CMO_1","CMO_2","CMO_3"),"IFNw"=c("CMO_4","CMO_5","CMO_6"),"IFNAR1"=c("CMO_7","CMO_8","CMO_9"),"HI7"=c("CMO_10","CMO_11","CMO_12"))
-subcluster(S_Combined.harm,tx=tx,integ="Harmony",parent,"hs")
-subcluster(S_Combined.SCT,tx=tx,integ="SCT",parent,"hs")
+tx = list("Mock"=c("CMO_1","CMO_2","CMO_3","CMO_4"),"Infected"=c("CMO_5","CMO_6","CMO_7","CMO_8"))
+subcluster(S_Combined.harm,tx=tx,integ="SubCluster",parent,"mm")
+subcluster(S_Combined.SCT,tx=tx,integ="SubCluster",parent,"mm")

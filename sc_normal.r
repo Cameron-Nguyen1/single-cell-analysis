@@ -1,12 +1,12 @@
 #!/bin/env Rscript
 #Normal workflow
-library(pacman,lib="")
+library(pacman,lib="/your/R/Library")
 dep = c("plyr","data.table","devtools","Seurat","tidyverse","miQC","SeuratWrappers","flexmix","SingleCellExperiment","SummarizedExperiment","RColorBrewer","ggsankey",
 "ggplot2","cowplot","SingleR","scran","celldex","ComplexHeatmap","pheatmap","circlize","GGally","forcats","dplyr","patchwork","pals","harmony",
 "ggpubr","paletteer","ggridges","fgsea","UCell","FactoMineR","factoextra","zeallot","gridExtra","grid","optparse")
-#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="")
-p_load(dep,character.only=TRUE,lib="",install=FALSE,update=FALSE)
-source("/sc_functions.r")
+#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="/your/R/Library")
+p_load(dep,character.only=TRUE,lib="/your/R/Library",install=FALSE,update=FALSE)
+source("/your/R/Library/sc_functions.r")
 
 S_Combined = readRDS(paste0(getwd(),"/S_Combined_postQC_stage1.rds"))
 DefaultAssay(S_Combined) = "RNA"

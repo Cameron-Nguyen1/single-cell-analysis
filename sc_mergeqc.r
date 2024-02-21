@@ -1,19 +1,22 @@
 #!/bin/env Rscript
-library(pacman,lib="")
+library(pacman,lib="/your/R/Library")
 dep = c("plyr","data.table","devtools","Seurat","tidyverse","miQC","SeuratWrappers","flexmix","SingleCellExperiment","SummarizedExperiment","RColorBrewer","ggsankey",
 "ggplot2","cowplot","SingleR","scran","celldex","ComplexHeatmap","pheatmap","circlize","GGally","forcats","dplyr","patchwork","pals","harmony",
 "ggpubr","paletteer","ggridges","fgsea","UCell","FactoMineR","factoextra","zeallot","gridExtra","grid","optparse")
-#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="")
-p_load(dep,character.only=TRUE,lib="",install=FALSE,update=FALSE)
+#lapply(dep,install.packages,character.only=TRUE,repos='http://cran.us.r-project.org',INSTALL_opts='--no-lock',lib="/your/R/Library")
+p_load(dep,character.only=TRUE,lib="/your/R/Library",install=FALSE,update=FALSE)
 option_list = list(
-  make_option(c("--base"),type="character", default=NULL,help="Input folder, where all the cellranger files are being stored.", metavar="character"),
-  make_option(c("--hs_or_mm"),type="character", default=NULL,help="Either HS or MM for homo sapiens and mus musculus respectively.", metavar="character")
+  make_option(c("--hs_or_mm"),type="character", default=NULL,help="Either HS or MM for homo sapiens and mus musculus respectively.", metavar="character"),
+  make_option(c("--samples"),type="character", default=NULL,help="Location of per sample out folders from 10x AGGR/Count pipeline. Contains count matrices.", metavar="character")
   )
 p = parse_args(OptionParser(option_list=option_list))
 
-source("/sc_functions.r")
-base="path/to/10x/counts/output"
-p3t = "mm" #mm for mus musculus or hs for homo sapiens
+source("/your/R/Library/sc_functions.r") # Source the sc_functions.r file, where it is located on your system.
+p3t = tolower(as.character(p[1]))
+base = as.character(p[2])
+
+
+
 
 #base=paste0(as.character(p[2]),"/")
 sample.cols = paletteer_d("ggsci::category20_d3")[1:length(list.files(base))]
@@ -93,7 +96,6 @@ pdf("Merged_postQC_Violin.pdf",width=15) #POSTQC VIOLIN
 VlnPlot(object = S_Combined, features = c("nCount_RNA", "nFeature_RNA", "percent.mt"), cols=sample.cols, pt.size=0, ncol = 3) & geom_jitter(alpha = 0.25, size = 0.1) #preQC stats
 dev.off()
 
-#p[3] = tolower(p[3])
 if (p3t == "mm"){
   h2m.df = read.table(paste0(getwd(),"/HMD_HumanPhenotype.rpt.txt"), sep = "\t") #Cell Cycle Scoring
   h2m.df = h2m.df[, c("V1","V3")]

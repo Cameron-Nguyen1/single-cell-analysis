@@ -15,14 +15,20 @@ generate_annot_cols = function(x){
   }
   return(myl)
 }
-aziPredict = function(dataset,assay,reference,outfile){
+aziPredict = function(dataset,assay,reference,hs_mm,outfile){
     options(Azimuth.map.ndims = 50)
-    dataset =  RunAzimuth(query=dataset,reference=reference,assay=assay,annotation.levels=c("ann_level_3","ann_level_4"))
+    if (hs_mm == "hs"){
+      levels = c("ann_level_3","ann_level_4")
+    }else{
+      levels =  c("celltype_level1","celltype_level2","celltype_level3")
+    }
+    dataset =  RunAzimuth(query=dataset,reference=reference,assay=assay,annotation.levels=levels)
     mzl = list("Map_Score.50"=table(dataset$mapping.score > .50),"Map_Score.75"=table(dataset$mapping.score > .75))
-    newl_s = list("aLevel3"=dataset$predicted.ann_level_3.score,"aLevel4"=dataset$predicted.ann_level_4.score)
-    for (i in 1:length(names(newl_s))){
-        mz_50 = list(name50=table(newl_s[[i]] >= .50))
-        mz_75 = list(name75=table(newl_s[[i]] >= .75))
+    ids = paste0("predicted.",levels,".score")
+    newframe = dataset[[ids]]
+    for (i in 1:length(names(newframe))){
+        mz_50 = list(name50=table(newframe[[i]] >= .50))
+        mz_75 = list(name75=table(newframe[[i]] >= .75))
         mzl = c(mzl, mz_50, mz_75)
     }
     lnum = 1
@@ -635,4 +641,50 @@ subcluster = function(x,tx,integ,parent,hs_or_mm){ #tx should be a list() with n
       }
   remove(list=objects()[objects() %like% "^sub\\d{1,}"])
   }
+}
+
+doCellChat = function(seuratObject,groups,hs_mm,threads){ #May have to set .libPaths to include R_LIB like .libPaths(new=c(.libPaths(),"/work/users/c/a/came/R_LIBS"))
+    cellchat = createCellChat(object=seuratObject,group.by=groups)
+    if (tolower(hs_mm) == "mm"){CellChatDB = CellChatDB.mouse}else{CellChatDB = CellChatDB.human}
+    cellchat@DB=CellChatDB
+    cellchat = subsetData(cellchat)
+    future::plan("multisession", workers = as.integer(threads))
+    cellchat = identifyOverExpressedGenes(cellchat)
+    cellchat = identifyOverExpressedInteractions(cellchat)
+    cellchat = projectData(cellchat, PPI.human) #Uses projected data as opposed to assay data, requires raw.use=FALSE in computeCommunProb function below.
+    cellchat = computeCommunProb(cellchat, type = "triMean",raw.use=FALSE)
+    cellchat = filterCommunication(cellchat, min.cells = 10)
+    cellchat = computeCommunProbPathway(cellchat)
+    cellchat = aggregateNet(cellchat)
+    return(cellchat)
+}
+
+doCellChatSummary = function(cellchatobj){
+    #write communication summary
+    comm_frame = subsetCommunication(cellchatobj)
+    write.csv(comm_frame,"Communication_Summary.csv")
+    
+    #Interactions + weight chord diagram
+    #groupSize = as.numeric(table(cellchatobj@idents))
+    #pdf("Thisexample.pdf",width=10,height=8)
+    #matr = matrix(data=c(1,2),nrow=1,ncol=2) doesnt work right currently, wont cooperate with saving an image correctly
+    #layout(mat=matr)
+    #netVisual_circle(cellchatobj@net$count, vertex.weight = groupSize, weight.scale = T, label.edge= F, title.name = "Number of interactions")
+    #netVisual_circle(cellchatobj@net$weight, vertex.weight = groupSize, weight.scale = T, label.edge= F, title.name = "Interaction weights/strength")
+    #dev.off()
+    
+    #Closely look at interactions and weights
+    mat = cellchatobj@net$weight
+    myl = list()
+    groupSize = as.numeric(table(cellchatobj@idents))
+    pdf("Interactions_Weights_Minimal.pdf",width=18,height=18)
+    par(mfrow = c(5,4), xpd=TRUE)
+    for (i in 1:nrow(mat)) {
+        idx=paste0("P",as.character(i))
+        mat2 <- matrix(0, nrow = nrow(mat), ncol = ncol(mat), dimnames = dimnames(mat))
+        mat2[i, ] <- mat[i, ]
+        netVisual_circle(mat2, vertex.weight = groupSize, weight.scale = T, edge.weight.max = max(mat), title.name = rownames(mat)[i])
+    }
+    dev.off()
+    return(comm_frame)
 }
