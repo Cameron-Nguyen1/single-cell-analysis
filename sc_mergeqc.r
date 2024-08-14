@@ -7,7 +7,7 @@ dep = c("plyr","data.table","devtools","Seurat","tidyverse","miQC","SeuratWrappe
 p_load(dep,character.only=TRUE,lib="/your/R/Library",install=FALSE,update=FALSE)
 option_list = list(
   make_option(c("--hs_or_mm"),type="character", default=NULL,help="Either HS or MM for homo sapiens and mus musculus respectively.", metavar="character"),
-  make_option(c("--samples"),type="character", default=NULL,help="Location of per sample out folders from 10x AGGR/Count pipeline. Contains count matrices.", metavar="character")
+  make_option(c("--samples"),type="character", default=NULL,help="Location of per sample out folders from 10x AGGR/Mutli/Count pipeline. Contains count matrices.", metavar="character")
   )
 p = parse_args(OptionParser(option_list=option_list))
 
